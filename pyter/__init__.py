@@ -88,11 +88,18 @@ def edit_distance(s, t):
 
 
 class CachedEditDistance(object):
-    u""" 編集距離のキャッシュ版
-    一回計算した途中結果を保存しておいて再利用する
+    u"""
+    編集距離のキャッシュ版 
+    一回計算した途中結果を保存しておいて再利用する 
     以前計算したリストをtrie木で保存して、重複する演算を省略する
     trieはネストした辞書で表現し、値に[次の辞書, キャッシュされた値]の長さ２のリストを用いる
     比較する対象はリスト化されている必要がある。
+    
+    The cache for edit distance.
+    Once calculated the intermediate results are saved for reuse and
+    previous calculations are stored in a trie data structure (omitting the duplicates).
+    The trie is represented in form of a nested dictionary, 
+    the value of the inner dictionaries are 
     """
     def __init__(self, rwords):
         self.rwds = rwords
@@ -104,6 +111,18 @@ class CachedEditDistance(object):
         score, newly_created_matrix = self._edit_distance(iwords, start_position, cached_score)
         self._add_cache(iwords, newly_created_matrix)  # もう一度たどって、キャッシュがないノードにキャッシュを挿入していく
         return score
+
+    def edit_distance(s, t):
+        """It's same as the Levenshtein distance"""
+        l = _gen_matrix(len(s) + 1, len(t) + 1, None)
+        l[0] = [x for x, _ in enumerate(l[0])]
+        for x, y in enumerate(l):
+            y[0] = x
+        for i, j in itrt.product(range(1, len(s) + 1), range(1, len(t) + 1)):
+            l[i][j] = min(l[i - 1][j] + 1,
+                          l[i][j - 1] + 1,
+                          l[i - 1][j - 1] + (0 if s[i - 1] == t[j - 1] else 1))
+        return l[-1][-1]
 
     def _edit_distance(self, iwords, spos, cache):
         u""" sposが0の場合はキャッシュなし。
